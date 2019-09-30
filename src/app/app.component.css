@@ -1,0 +1,43 @@
+#page {
+  display: inline-flex;
+  width: min-content;
+  height: min-content;
+  padding: 3.5% 0 0 3.5%;
+ }
+
+.intro {
+  text-align: justify;
+}
+
+mat-chip-list *{
+  display: inline-flex;
+}
+mat-tab-group * {
+  margin: 1em;
+}
+
+.controls button {
+  width: 50px;
+  height: 50px;
+  font-size: 50px;
+}
+
+#menu {
+  width: min-content;
+  overflow-y: auto;
+}
+
+app-canvas{
+  position: relative;
+}
+canvas {
+  image-rendering: pixelated;
+}
+
+.colorBox {
+  width: 50px;
+  height: 50px;
+}
+input[type=number] {
+  width: 3em;
+}

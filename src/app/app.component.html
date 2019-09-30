@@ -1,0 +1,303 @@
+<div id="page">
+  <div>
+    <app-canvas #canvas (contextmenu)="onContextMenu()" (mousedown)="startDrawing($event)" (mousemove)="draw ? moveDrawing($event) : move($event)"
+                (window:mouseup)="stopDrawing()" (wheel)="zoom($event)"
+                [inCellSize]=inCellSize [inCols]="inCols" [inRows]="inRows"></app-canvas>
+    <mat-chip-list fxLayout="row" fxLayoutAlign="center">
+      <div class="controls">
+        <button mat-icon-button (click)="step()" matTooltip="Creates a new generations of cells." color="primary">
+          <mat-icon inline="true">navigate_next</mat-icon>
+        </button>
+        <button mat-icon-button (click)="start()" matTooltip="Starts generating cells automatically." color="primary">
+          <mat-icon inline="true">play_arrow</mat-icon>
+        </button>
+        <button mat-icon-button (click)="pause()" matTooltip="Stops automatic generating." color="primary">
+          <mat-icon inline="true">pause</mat-icon>
+        </button>
+      </div>
+    </mat-chip-list>
+  </div>
+  <div id="menu">
+    <mat-tab-group dynamicHeight="1">
+      <mat-tab label="Welcome">
+        <div class="intro">
+          <p>The world of cellular automata (CA) is one of the not much widely known areas of computer science. At the very first glance it might seem that these only create spectacular patterns and are not useful otherwise. However, the opposite is true!</p>
+          <p>Cellular automata exhibit some properties from our real world. They create patterns that are sometimes completely random, other times symmetrical or repeating itself. The symmetrical ones are actually quite interesting. As applying only rules on a local level produces patterns that seem to obey rules on a global level, it tells us an important thing about our universe – things that appear to be behaving in a certain way might be just a result of laws applied on a lower level.</p>
+          <p>In science, cellular automata are used to model situation which would be otherwise impossible or at least extremely expensive to be modelled using exact mathematical equations.</p>
+          <p>Using cellular automata one can observe formation of a galaxy, diffusion of two liquids or the process of creating a snowflake. There are many more situations from physics, chemistry and biology which can be modelled using these. But natural sciences are not the only which can use the power of modelling patterns using cellular automatons. It can find its use even in science such as sociology.</p>
+          <p>Surprisingly, these models are sufficiently exact as their results, if the rules are selected carefully, correspond with reality.</p>
+          <p>This app was intended to serve as a playground, where you can try out different rules and observe how cells in these behave, while getting a bit of insight into the fascinating world of cellular automata.</p>
+          <p>Therefore, play, learn and have fun!</p>
+        </div>
+      </mat-tab>
+      <mat-tab label="About">
+        <div class="intro">
+          <p><strong>Life</strong></p>
+          <p>In this category – cells can find themselves in one of two states, either dead or alive. When a cell is dead, it can be reborn provided having appropriate count of living neighbours (birth counts). Similarly, a cell survives when there is correct number of living neighbours (survival counts) and dies otherwise.</p>
+          <p><strong>Generations</strong></p>
+          <p>This category is very similar to the ‘Life’ category. Unlike in Life, cell has more than two states – alive, dead and many refractory (aging) states. Cells are born and stay in the alive state exactly in the same way as in Life. However, instead of dying, they only become older and die when they become too old.</p>
+          <p><strong>Larger than Life</strong></p>
+          <p>The same as the Life category, except it is designed for larger neighbourhood radii than Life. As in Life, cells can be either alive or dead – being born when having enough of living neighbours, the same for dying.</p>
+          <p><strong>Cyclic</strong></p>
+          <p>The type of Cyclic automata supports many states. A cell enters the next state only if there are at least threshold cells of the next state around the cell.</p>
+          <p><strong>Cyclic GH</strong></p>
+          <p>Cyclic Greenberg-Hastings automata are very similar to the Generations. Dead cells need at least threshold alive neighbours to turn alive themselves, and then they ascend to higher states automatically.</p>
+          <p><strong>Vote for Life</strong></p>
+          <p>This category is a simplified version of Life. A cell is alive if it has exactly (one of alive states) alive neighbours, counting itself. Thus it doesn't matter if the cell is dead or alive at the moment.</p>
+          <p><strong>Weighted Life</strong></p>
+          <p>Yet another derivation of Life, except every neighbouring cell including the cell itself has a value (weight) given by a rule. Based on these weights is then determined whether the cell is born or not and whether it survives or not (the survival and birth counts are usually a lot higher than in Life though).</p>
+          <p><strong>Weighted Generations</strong></p>
+          <p>Weighted Generations rules extend those for Generations. Like in Generations there are many states, but unlike it, every generation has a value (weight), which contributes to the neighbourhood count.</p>
+          <p>Similarly to Weighted Life, neighbours can also have value depending on their position to the cell.</p>
+        </div>
+      </mat-tab>
+      <mat-tab label="Rulesets">
+        <mat-accordion>
+          <mat-expansion-panel *ngFor="let c of collection">
+            <mat-expansion-panel-header>{{c.name}}</mat-expansion-panel-header>
+            <mat-chip-list>
+              <mat-chip *ngFor="let game of c.config;" (click)="assignGame(game, c.type)">
+                {{game.name}}
+              </mat-chip>
+            </mat-chip-list>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-tab>
+      <mat-tab label="Rule configuration">
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Patterns
+              </mat-panel-title>
+              <mat-panel-description>
+                Select the initial pattern.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <mat-chip-list>
+              <mat-chip (click)="assignGrid('ssg', 0)" matTooltip="An empty board.">Empty</mat-chip>
+              <mat-chip disableRipple matTooltip="A board filled with cells of a single state.">
+                Single state
+                <mat-slider style="margin: 10px" min="0" [max]="states - 1" value="1" step="1"
+                            (input)="changeStateSelection($event.value)"></mat-slider>
+                {{stateSelection}}
+                <mat-basic-chip style="margin: 10px" (mousedown)="assignGrid('ssg', stateSelection)">
+                  Generate
+                </mat-basic-chip>
+              </mat-chip>
+              <mat-chip disableRipple matTooltip="Living and death cells (state 1/0) in given ratio.">
+                Random (density)
+                <mat-slider style="margin:10px" min="0" max="1" value="0.5" step="0.01"
+                            (input)="changeDensity($event.value)"></mat-slider>
+                {{density}}
+                <mat-basic-chip style="margin: 10px" (mousedown)="assignGrid('rndd', density)">
+                  Generate
+                </mat-basic-chip>
+              </mat-chip>
+              <mat-chip disableRipple (mousedown)="assignGrid('rndu')" matTooltip="Cells can have any state.">
+                Random (uniform)
+              </mat-chip>
+            </mat-chip-list>
+          </mat-expansion-panel>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Parameters
+              </mat-panel-title>
+              <mat-panel-description>
+                Change the rule parameters.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <app-game-ui #ruleConfig></app-game-ui>
+          </mat-expansion-panel>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Neighbourhood
+              </mat-panel-title>
+              <mat-panel-description>
+                Manage how the neighbours of each cell are selected.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <mat-chip-list>
+              <mat-chip (click)="changeNeighbourhoodID('m')" matTooltip="Horizontal and vertical neighbours.">Moore's neighbourhood</mat-chip>
+              <mat-chip (click)="changeNeighbourhoodID('vn')" matTooltip="Horizontal, vertical and diagonal neighbours.">Von Neumann's neighbourhood</mat-chip>
+            </mat-chip-list>
+            <label matTooltip="The maximum distance for two cells to be adjacent.">
+              Select radius:
+              <mat-slider style="margin: 1.5em" min="1" max="{{ radiusMax }}" value="{{ neighbourhoodRadius }}" step="1"
+                          thumbLabel (input)="changeNeighbourhoodRadius($event.value)"></mat-slider>
+              {{ neighbourhoodRadius }}
+            </label>
+          </mat-expansion-panel>
+          <mat-expansion-panel *ngIf="colorScheme">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Colors
+              </mat-panel-title>
+              <mat-panel-description>
+                Modify the color scheme.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <label matTooltip="The color of living cells (state 1)"><b>Foreground</b></label>
+            <p>
+              Hue:
+              <mat-slider min="0" max="359" step="1" value="0" thumbLabel (input)="foregroundChanged($event.value, 0)"></mat-slider>
+            </p>
+            <p>
+              Saturation:
+              <mat-slider min="0" max="100" step="1" value="100" thumbLabel (input)="foregroundChanged($event.value, 1)"></mat-slider>
+            </p>
+            <p>
+              Luminosity:
+              <mat-slider min="0" max="100" step="1" value="50" thumbLabel (input)="foregroundChanged($event.value, 2)"></mat-slider>
+            </p>
+            <div class="colorBox"></div>
+            <div *ngIf="states > 2">
+              <label matTooltip="The color of cell in state n-1 (where n is the number of states)."><b>Secondary</b></label>
+              <p>
+                Hue:
+                <mat-slider min="0" max="359" step="1" value="0" thumbLabel (input)="foregroundChanged($event.value, 3)"></mat-slider>
+              </p>
+              <p>
+                Saturation:
+                <mat-slider min="0" max="100" step="1" value="100" thumbLabel (input)="foregroundChanged($event.value, 4)"></mat-slider>
+              </p>
+              <p>
+                Luminosity:
+                <mat-slider min="0" max="100" step="1" value="50" thumbLabel (input)="foregroundChanged($event.value, 5)"></mat-slider>
+              </p>
+            </div>
+            <label matTooltip="The color of dead cells (state 0).">
+              <b>Background</b>
+              <mat-radio-group [(ngModel)]="selectedBackground">
+                <mat-radio-button *ngFor="let color of backgroundColors" [value]="color" (click)="refreshScheme(color)">
+                  {{color}}
+                </mat-radio-button>
+              </mat-radio-group>
+            </label>
+            <p>
+              <mat-chip (click)="defaultScheme()" matTooltip="Assigns the default color scheme for the current rule.">Default</mat-chip>
+            </p>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-tab>
+      <mat-tab label="Grid controls">
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Dimensions
+              </mat-panel-title>
+              <mat-panel-description>
+                Adjust size of the canvas.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div>
+              <div style="display: block">
+                <label>
+                  Cell size:
+                  <input type="number" min="2" max="20" [(ngModel)]="cellSize" matInput>
+                </label>
+              </div>
+              <div style="display: block">
+                <label>
+                  No. of rows:
+                  <input type="number" min="1" [(ngModel)]="rows" matInput>
+                </label>
+                <label>
+                  No. of columns:
+                  <input type="number" min="1" [(ngModel)]="cols" matInput>
+                </label>
+              </div>
+              <div style="display: block">
+                <mat-basic-chip style="float:left" (click)="resize()">Resize</mat-basic-chip>
+                <mat-basic-chip style="float:right" (click)="reset()">Reset</mat-basic-chip>
+              </div>
+            </div>
+          </mat-expansion-panel>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Speed
+              </mat-panel-title>
+              <mat-panel-description>
+                Choose the speed of change.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <label matTooltip="{{tempoMSDelay}}ms delay between generations.">
+              <mat-slider min="0" max="7" value="5" step="1" (input)="changeTempo($event.value)"></mat-slider>
+              {{ tempo }}
+            </label>
+          </mat-expansion-panel>
+          <mat-expansion-panel *ngIf="states > 0">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Other
+              </mat-panel-title>
+              <mat-panel-description>
+                Configure other grid settings.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div>
+              <label><mat-slide-toggle (change)="isToroidalChecked()" matTooltip="The grid acts as a surface of a torus.">Wrap</mat-slide-toggle></label>
+              <label><mat-slide-toggle (change)="toggleHasBorder()" matTooltip="Cells are visually separated.">Grid</mat-slide-toggle></label>
+              <label style="display: block">
+                <b>
+                  Mode
+                </b>
+                <mat-radio-group>
+                  <mat-radio-button value="" (change)="toggleDraw()">Move</mat-radio-button>
+                  <mat-radio-button checked (change)="toggleDraw()">Draw</mat-radio-button>
+                </mat-radio-group>
+              </label>
+              <div *ngIf="draw" style="display: inline">
+                <b style="display: block">Mouse button states</b>
+                <p>
+                  <label matTooltip="State of a cell drawn by the left mouse button.">Left
+                    <mat-slider min="0" (input)="leftClick=$event.value" step="1" thumbLabel value="{{leftClick}}" max="{{states - 1}}"></mat-slider>
+                    {{leftClick}}
+                  </label>
+                </p>
+                <p>
+                  <label matTooltip="State of a cell drawn by the scroll wheel.">Middle
+                    <mat-slider min="0" (input)="middleClick=$event.value" step="1" thumbLabel value="{{middleClick}}" max="{{states - 1}}" ></mat-slider>
+                    {{middleClick}}
+                  </label>
+                </p>
+                <p>
+                  <label matTooltip="State of a cell drawn by the right mouse button.">Right
+                    <mat-slider min="0" (input)="rightClick=$event.value" step="1" thumbLabel value="{{rightClick}}" max="{{states - 1}}"></mat-slider>
+                    {{rightClick}}
+                  </label>
+                </p>
+              </div>
+            </div>
+          </mat-expansion-panel>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                Changes
+              </mat-panel-title>
+              <mat-panel-description>
+                Define what to keep during the rule change.
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div class="userInput">
+              <label><mat-slide-toggle [(ngModel)]="preservePattern" matTooltip="States of the cells do not change when switching a rule.">Pattern</mat-slide-toggle></label>
+              <label><mat-slide-toggle [(ngModel)]="preserveNeighbourhood" matTooltip="The neighbourhood settings are preserved between different rules.">Neighbourhood</mat-slide-toggle></label>
+              <label><mat-slide-toggle [(ngModel)]="preserveColors" matTooltip="The colors stay the same after a rule change.">Color scheme</mat-slide-toggle></label>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-tab>
+      <mat-tab label="Resources">
+        <div id="rsc">
+          <p>Most of the content on this page was inspired by Mirek Wojtowicz's <a href="http://psoup.math.wisc.edu/mcell/" target="_blank" style="margin: 0">MCell</a>, a Java applet written in 1999 along with a rich wiki about all things CA. The wiki also contains detailed explanation and a lot of image examples of rulesets presented here (and even other CA), so we definitely recommend you to check it out.</p>
+          <p>Some specific rulesets (e.g. Larger Than Life) were taken from the <a href="http://www.conwaylife.com/wiki/Main_Page" target="_blank" style="margin: 0">LifeWiki</a>, which, besides being a wiki about Game of Life and similar CA, has one of the largest collections of patterns (initial configurations) for Life on the Internet.</p>
+          <b>This app was made for the <a href="https://www.itnetwork.cz" target="_blank" style="margin: 0">ITnetwork summer 2019 coding contest</a>.</b>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

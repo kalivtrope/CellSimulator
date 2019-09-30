@@ -1,0 +1,9 @@
+
+input[type=number] {
+  width: 3em;
+}
+
+label {
+  display: block;
+  margin: 3px 3px 3px 0;
+}

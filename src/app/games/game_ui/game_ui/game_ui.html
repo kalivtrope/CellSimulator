@@ -1,0 +1,109 @@
+<div *ngIf="game.constructor.name == 'VoteForLife'">
+  <p style="float: left;">Alive states</p>
+  <div style="float: right; margin-right: 25%">
+    <div *ngFor="let i of range(10)" style="display: inline; margin: 1px;">
+      <mat-label style="display: inline-grid; text-align: center;">
+        {{i}}
+        <mat-checkbox [checked]="voteStates[i]" (change)="changeVote(i)"></mat-checkbox>
+      </mat-label>
+    </div>
+  </div>
+</div>
+<div *ngIf="game.constructor.name == 'Life' || game.constructor.name == 'Generations'">
+  <div>
+    <p>Birth counts</p>
+    <div>
+      <div *ngFor="let i of range(9)" style="display: inline; margin: 1px;">
+        <mat-label style="display: inline-grid; text-align: center;">
+          {{i}}
+          <mat-checkbox [checked]="game.birthCounts[i]" (change)="game.birthCounts[i] = !(game.birthCounts[i] || 0)"></mat-checkbox>
+        </mat-label>
+      </div>
+    </div>
+  </div>
+  <div>
+    <p>Survival counts</p>
+    <div>
+      <div *ngFor="let i of range(9)" style="display: inline; margin: 1px;">
+        <mat-label style="display: inline-grid; text-align: center;">
+          {{i}}
+          <mat-checkbox [checked]="game.survivalCounts[i]" (change)="game.survivalCounts[i] = !(game.survivalCounts[i] || 0)"></mat-checkbox>
+        </mat-label>
+      </div>
+    </div>
+  </div>
+</div>
+<label *ngIf="game.constructor.name !== 'VoteForLife' && game.constructor.name !== 'Life'">
+  Number of states: <input matInput type="number" min="2" max="50" [value]="game.states" (input)="changeStates($event.target.valueAsNumber)">
+</label>
+<label *ngIf="game.constructor.name == 'WeightedGenerations'" style="display: block">
+  State Weights <br>
+  <label *ngFor="let i of range(game.states)">
+    {{i}}
+    <input type="number" [value]="game.stateWeights[i] || 0" (change)="game.stateWeights[i] = $event.target.valueAsNumber">
+  </label>
+</label>
+<label *ngIf="game.constructor.name == 'Cyclic' || game.constructor.name == 'CyclicGH'">
+  Threshold: <input matInput type="number" min="0" [value]="game.threshold" (input)="game.threshold = $event.target.valueAsNumber">
+</label>
+<label *ngIf="game.constructor.name == 'WeightedLife' || game.constructor.name == 'WeightedGenerations'" style="display: block; margin: 5px;">
+  Neighbourhood weights
+  <table>
+    <tr *ngFor="let i of range(3)">
+      <td *ngFor="let j of range(3)">
+        <input matInput type="number" [value]="game.neighbourWeights[tableMapping(i, j)] || '0'" (input)="game.neighbourWeights[tableMapping(i, j)] = $event.target.valueAsNumber">
+      </td>
+    </tr>
+  </table>
+</label>
+<div *ngIf="game.constructor.name == 'WeightedLife' || game.constructor.name == 'WeightedGenerations'">
+  <mat-form-field style="width: 100%">
+    <mat-chip-list #chipList1>
+      <span *ngFor="let rs of game.survivalCounts; index as i">
+      <mat-chip *ngIf="rs" [removable]="true" (removed)="game.survivalCounts[i] = false">
+        {{i}}
+        <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      </span>
+      <input placeholder="Survival counts"
+             [matChipInputFor]="chipList1"
+             [matChipInputSeparatorKeyCodes]="sepCodes"
+             [matChipInputAddOnBlur]="true"
+             (matChipInputTokenEnd)="addSurvival($event)"
+             type="number">
+    </mat-chip-list>
+  </mat-form-field>
+  <mat-form-field style="width: 100%">
+    <mat-chip-list #chipList2>
+      <span *ngFor="let rb of game.birthCounts; index as i">
+      <mat-chip *ngIf="rb" [removable]="true" (removed)="game.birthCounts[i] = false">
+        {{i}}
+        <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      </span>
+      <input placeholder="Birth counts"
+             [matChipInputFor]="chipList2"
+             [matChipInputSeparatorKeyCodes]="sepCodes"
+             [matChipInputAddOnBlur]="true"
+             (matChipInputTokenEnd)="addBirth($event)"
+             type="number">
+    </mat-chip-list>
+  </mat-form-field>
+</div>
+<div *ngIf="game.constructor.name == 'LargerThanLife'">
+  <label>
+    Survival minimum: <input type="number" [value]="game.sRangeMin" (change)="game.sRangeMin = $event.target.valueAsNumber">
+  </label>
+  <label>
+    Survival maximum: <input type="number" [value]="game.sRangeMax" (change)="game.sRangeMax = $event.target.valueAsNumber">
+  </label>
+  <label>
+    Birth minimum: <input type="number" [value]="game.bRangeMin" (change)="game.bRangeMin = $event.target.valueAsNumber">
+  </label>
+  <label>
+    Birth maximum:  <input type="number" [value]="game.bRangeMax" (change)="game.bRangeMax = $event.target.valueAsNumber">
+  </label>
+  <label>
+    Count middle cell: <mat-checkbox [value]="game.middleCellCounted" (change)="game.middleCellCounted = !(game.middleCellCounted || 0)"></mat-checkbox>
+  </label>
+</div>
